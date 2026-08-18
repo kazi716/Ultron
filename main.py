@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 from core.brain import UltronBrain
+from core.voice import UltronVoice
 
 def main():
     print("Initializing Ultron...")
@@ -13,25 +14,39 @@ def main():
 
     try:
         brain = UltronBrain(api_key=api_key)
+        voice = UltronVoice()
     except Exception as e:
-        print(f"Failed to initialize Ultron's Brain: {e}")
+        print(f"Failed to initialize Ultron: {e}")
         return
 
-    print("Ultron is online. Waiting for input...")
+    voice.speak("Ultron is online and ready.")
     
     while True:
         try:
-            # For now, we use text input. Voice will be added in the voice module.
-            user_input = input("\nYou: ")
-            if user_input.lower() in ['exit', 'quit']:
-                print("Ultron shutting down...")
+            mode = input("\nPress [Enter] to speak, or type your message (type 'exit' to quit): ")
+            
+            if mode.lower() in ['exit', 'quit']:
+                voice.speak("Shutting down. Goodbye.")
                 break
                 
+            if mode.strip() == "":
+                # Voice Mode
+                user_input = voice.listen()
+                if not user_input:
+                    continue # Skip if nothing was heard
+            else:
+                # Text Mode
+                user_input = mode
+                
+            # Process with Gemini
             response = brain.process_input(user_input)
-            print(f"Ultron: {response}")
+            
+            # Speak and print response
+            voice.speak(response)
             
         except KeyboardInterrupt:
-            print("\nUltron shutting down...")
+            print("\n")
+            voice.speak("Emergency shutdown initiated. Goodbye.")
             break
 
 if __name__ == "__main__":
