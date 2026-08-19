@@ -2,6 +2,13 @@ import os
 import sys
 import threading
 from dotenv import load_dotenv
+
+# Fix for pythonw: Redirect prints to a log file instead of a missing console!
+if sys.stdout is None or sys.stderr is None:
+    log_file = open("ultron_background.log", "a", buffering=1)
+    if sys.stdout is None: sys.stdout = log_file
+    if sys.stderr is None: sys.stderr = log_file
+
 from core.brain import UltronBrain
 from core.voice import UltronVoice
 from core.server import run_server
