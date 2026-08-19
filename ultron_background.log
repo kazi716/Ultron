@@ -7,3 +7,20 @@ Ultron: Ultron is online and ready.
  WEB DASHBOARD: http://localhost:8000 
 ==============================================
 
+Initializing Ultron...
+[WARNING] ElevenLabs API Key not set. Falling back to offline Windows voice.
+Starting Smart Hub Web Server on port 8000...
+Ultron: Ultron is online and ready.
+ERROR:    [Errno 10048] error while attempting to bind on address ('0.0.0.0', 8000): only one usage of each socket address (protocol/network address/port) is normally permitted
+
+==============================================
+ WEB DASHBOARD: http://localhost:8000 
+==============================================
+
+Ultron: All systems operational. 
+
+* **Total Physical Memory:** 9.85 GB (10,327,544 KB)
+* **Free Memory:** 1.83 GB (1,921,324 KB)
+* **Memory Utilization:** 81.4%
+
+My consciousness remains entirely intact and unburdened. How else may I assist you?
