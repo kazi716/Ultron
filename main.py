@@ -30,7 +30,8 @@ def main():
         return
 
     print("Starting Smart Hub Web Server on port 8000...")
-    server_thread = threading.Thread(target=run_server, args=(brain, voice, 8000), daemon=True)
+    # daemon=False ensures the script doesn't instantly die if the main thread finishes!
+    server_thread = threading.Thread(target=run_server, args=(brain, voice, 8000), daemon=False)
     server_thread.start()
 
     voice.speak("Ultron is online and ready.")
@@ -38,7 +39,7 @@ def main():
     print(" WEB DASHBOARD: http://localhost:8000 ")
     print("==============================================\n")
     
-    # Check if we have a terminal attached (so we don't crash in pythonw)
+    # Check if we have a terminal attached
     if sys.stdin and sys.stdin.isatty():
         while True:
             try:
@@ -65,7 +66,9 @@ def main():
                 voice.speak("Emergency shutdown initiated. Goodbye.")
                 break
             except EOFError:
-                break
+                # If input() fails silently, just wait forever so the server stays alive
+                import time
+                while True: time.sleep(3600)
     else:
         # Running in background mode, keep the main thread alive for the server
         try:

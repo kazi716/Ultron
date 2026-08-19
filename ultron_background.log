@@ -1,0 +1,9 @@
+Initializing Ultron...
+[WARNING] ElevenLabs API Key not set. Falling back to offline Windows voice.
+Starting Smart Hub Web Server on port 8000...
+Ultron: Ultron is online and ready.
+
+==============================================
+ WEB DASHBOARD: http://localhost:8000 
+==============================================
+
