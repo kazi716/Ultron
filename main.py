@@ -1,4 +1,5 @@
 import os
+import sys
 import threading
 from dotenv import load_dotenv
 from core.brain import UltronBrain
@@ -30,33 +31,40 @@ def main():
     print(" WEB DASHBOARD: http://localhost:8000 ")
     print("==============================================\n")
     
-    while True:
-        try:
-            mode = input("\nPress [Enter] to speak, or type your message (type 'exit' to quit): ")
-            
-            if mode.lower() in ['exit', 'quit']:
-                voice.speak("Shutting down. Goodbye.")
+    # Check if we have a terminal attached (so we don't crash in pythonw)
+    if sys.stdin and sys.stdin.isatty():
+        while True:
+            try:
+                mode = input("\nPress [Enter] to speak, or type your message (type 'exit' to quit): ")
+                
+                if mode.lower() in ['exit', 'quit']:
+                    voice.speak("Shutting down. Goodbye.")
+                    break
+                    
+                if mode.strip() == "":
+                    # Voice Mode
+                    user_input = voice.listen()
+                    if not user_input:
+                        continue
+                else:
+                    # Text Mode
+                    user_input = mode
+                    
+                response = brain.process_input(user_input)
+                voice.speak(response)
+                
+            except KeyboardInterrupt:
+                print("\n")
+                voice.speak("Emergency shutdown initiated. Goodbye.")
                 break
-                
-            if mode.strip() == "":
-                # Voice Mode
-                user_input = voice.listen()
-                if not user_input:
-                    continue # Skip if nothing was heard
-            else:
-                # Text Mode
-                user_input = mode
-                
-            # Process with Gemini
-            response = brain.process_input(user_input)
-            
-            # Speak and print response
-            voice.speak(response)
-            
+            except EOFError:
+                break
+    else:
+        # Running in background mode, keep the main thread alive for the server
+        try:
+            server_thread.join()
         except KeyboardInterrupt:
-            print("\n")
-            voice.speak("Emergency shutdown initiated. Goodbye.")
-            break
+            pass
 
 if __name__ == "__main__":
     main()
