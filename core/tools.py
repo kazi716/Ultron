@@ -17,8 +17,24 @@ def open_website(url: str) -> str:
     except Exception as e:
         return f"Failed to open website: {e}"
 
-def execute_system_command(command: str) -> str:
-    """Executes a terminal/command prompt command and returns the output. Use this to open applications, manage files, or get system info."""
+def execute_system_command(command: str, auth_code: str = "") -> str:
+    """
+    Executes a terminal/command prompt command. 
+    If the command is dangerous (e.g., deleting files), you MUST ask the user for their password first, and pass it into 'auth_code'.
+    """
+    # 1. Check for dangerous keywords
+    dangerous_keywords = ["del ", "rm ", "rmdir", "format", "erase"]
+    command_lower = command.lower()
+    
+    is_dangerous = any(keyword in command_lower for keyword in dangerous_keywords)
+    
+    # 2. Block execution if dangerous and password is wrong
+    if is_dangerous:
+        correct_password = os.getenv("ULTRON_PASSWORD", "ironman")
+        if auth_code != correct_password:
+            return "ERROR: DANGEROUS COMMAND BLOCKED. You must ask the user for their authorization password in the chat, and then pass it into the 'auth_code' parameter to proceed."
+
+    # 3. Execute the command if safe or authorized
     try:
         result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=10)
         if result.returncode == 0:
