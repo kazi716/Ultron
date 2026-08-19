@@ -3,76 +3,168 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ULTRON // HUB</title>
+    <title>ULTRON // MATRIX HUD</title>
     <style>
-        body { 
-            font-family: 'Courier New', Courier, monospace; 
-            background-color: #050505; 
-            color: #ff3333; 
-            padding: 20px; 
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            font-family: 'Courier New', Courier, monospace;
+            overflow: hidden;
             display: flex;
             justify-content: center;
+            align-items: center;
         }
-        .container {
+
+        /* Matrix Canvas Background */
+        #matrixCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
-            max-width: 800px;
+            height: 100%;
+            z-index: 1;
+            opacity: 0.6;
         }
-        h2 { border-bottom: 2px solid #ff3333; padding-bottom: 10px; }
+
+        .container {
+            width: 90%;
+            max-width: 900px;
+            height: 85vh;
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+            position: relative;
+        }
+        
+        h2 { 
+            color: #00ff00;
+            text-align: center;
+            border-bottom: 2px solid #00ff00; 
+            padding-bottom: 15px; 
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #00ff00;
+        }
+        
+        /* HUD Chat Box */
         .chat-box { 
-            height: 60vh; 
-            overflow-y: scroll; 
-            border: 1px solid #ff3333; 
-            padding: 15px; 
-            margin-bottom: 15px; 
-            background: #0a0a0a;
+            flex-grow: 1;
+            overflow-y: auto; 
+            border: 1px solid rgba(0, 255, 0, 0.5); 
+            padding: 20px; 
+            margin-bottom: 20px; 
+            background: rgba(0, 10, 0, 0.85);
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.2), inset 0 0 20px rgba(0, 255, 0, 0.1);
+            border-radius: 3px;
         }
-        .message { margin-bottom: 10px; line-height: 1.5; }
-        .user-msg { color: #aaaaaa; }
-        .ultron-msg { color: #ff3333; font-weight: bold; }
-        .input-group { display: flex; }
+
+        .message { margin-bottom: 15px; line-height: 1.6; font-size: 15px; }
+        .user-msg { color: #888; border-left: 3px solid #888; padding-left: 10px; }
+        .ultron-msg { color: #00ff00; font-weight: bold; border-left: 3px solid #00ff00; padding-left: 10px; text-shadow: 0 0 5px rgba(0, 255, 0, 0.5); }
+        
+        /* Input Area */
+        .input-group { display: flex; gap: 15px; }
         input { 
             flex: 1; 
             padding: 15px; 
-            background: #111; 
-            color: #ff3333; 
-            border: 1px solid #ff3333; 
+            background: rgba(0, 255, 0, 0.05); 
+            color: #00ff00; 
+            border: 1px solid rgba(0, 255, 0, 0.5); 
             outline: none; 
             font-family: 'Courier New', Courier, monospace;
             font-size: 16px;
         }
+        input:focus {
+            background: rgba(0, 255, 0, 0.15);
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.4);
+        }
         button { 
-            padding: 15px 30px; 
-            background: #ff3333; 
-            color: #000; 
-            border: none; 
+            padding: 15px 40px; 
+            background: rgba(0, 255, 0, 0.1);
+            color: #00ff00; 
+            border: 1px solid #00ff00; 
             cursor: pointer; 
             font-weight: bold; 
             font-family: 'Courier New', Courier, monospace;
             font-size: 16px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            transition: all 0.2s;
         }
-        button:hover { background: #ff6666; }
+        button:hover { 
+            background: #00ff00; 
+            color: #000;
+            box-shadow: 0 0 20px #00ff00;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0, 20, 0, 0.5); }
+        ::-webkit-scrollbar-thumb { background: #00ff00; }
     </style>
 </head>
 <body>
+    <canvas id="matrixCanvas"></canvas>
+
     <div class="container">
-        <h2>ULTRON // SMART HUB</h2>
+        <h2>> THE_MATRIX // ULTRON_CORE</h2>
         <div class="chat-box" id="chat">
-            <div class="message ultron-msg">[SYSTEM] Connection established to Ultron Core...</div>
+            <div class="message ultron-msg">[SYSTEM] Welcome to the real world.</div>
         </div>
         <div class="input-group">
-            <input type="text" id="cmdInput" placeholder="Enter command directive..." onkeypress="handleEnter(event)" autocomplete="off">
-            <button onclick="sendCommand()">TRANSMIT</button>
+            <input type="text" id="cmdInput" placeholder="Enter command..." onkeypress="handleEnter(event)" autocomplete="off">
+            <button onclick="sendCommand()">EXECUTE</button>
         </div>
     </div>
 
     <script>
+        // --- MATRIX RAIN EFFECT ---
+        const canvas = document.getElementById('matrixCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$+-*/=%""\'#&_(),.;:?!\\|{}<>[]^~ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ'.split('');
+        const fontSize = 14;
+        let columns = canvas.width / fontSize;
+        let drops = [];
+        for (let x = 0; x < columns; x++) drops[x] = 1;
+
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#00ff00';
+            ctx.font = fontSize + 'px monospace';
+            
+            for (let i = 0; i < drops.length; i++) {
+                const text = chars[Math.floor(Math.random() * chars.length)];
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+        setInterval(drawMatrix, 35);
+
+        // --- CHAT LOGIC ---
         const chat = document.getElementById('chat');
         const input = document.getElementById('cmdInput');
 
         function appendMessage(sender, text, className) {
             const div = document.createElement('div');
             div.className = `message ${className}`;
-            div.innerHTML = `[${sender.toUpperCase()}]: ${text}`;
+            div.innerHTML = `> [${sender.toUpperCase()}]: ${text}`;
             chat.appendChild(div);
             chat.scrollTop = chat.scrollHeight;
         }
@@ -93,7 +185,7 @@
                 const data = await response.json();
                 appendMessage('Ultron', data.response, 'ultron-msg');
             } catch (err) {
-                appendMessage('System', 'Error communicating with Ultron Core.', 'ultron-msg');
+                appendMessage('System', 'CRITICAL ERROR: UPLINK SEVERED.', 'ultron-msg');
             }
         }
 
