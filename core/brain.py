@@ -15,7 +15,7 @@ class UltronBrain:
         
         # We use a chat session so Ultron remembers the conversation history
         self.chat = self.client.chats.create(
-            model='gemini-2.5-flash',
+            model='gemini-3.6-flash',
             config=types.GenerateContentConfig(
                 system_instruction=self.system_instruction,
                 temperature=0.7,

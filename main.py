@@ -1,7 +1,9 @@
 import os
+import threading
 from dotenv import load_dotenv
 from core.brain import UltronBrain
 from core.voice import UltronVoice
+from core.server import run_server
 
 def main():
     print("Initializing Ultron...")
@@ -19,7 +21,14 @@ def main():
         print(f"Failed to initialize Ultron: {e}")
         return
 
+    print("Starting Smart Hub Web Server on port 8000...")
+    server_thread = threading.Thread(target=run_server, args=(brain, voice, 8000), daemon=True)
+    server_thread.start()
+
     voice.speak("Ultron is online and ready.")
+    print("\n==============================================")
+    print(" WEB DASHBOARD: http://localhost:8000 ")
+    print("==============================================\n")
     
     while True:
         try:
