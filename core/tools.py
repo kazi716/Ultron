@@ -5,6 +5,9 @@ from datetime import datetime
 import wikipedia
 import requests
 from duckduckgo_search import DDGS
+import imaplib
+import email
+from email.header import decode_header
 
 def open_website(url: str) -> str:
     """Opens a website in the default browser. Ensure the URL starts with http:// or https://."""
@@ -79,5 +82,44 @@ def get_weather(city: str) -> str:
     except Exception as e:
         return f"Failed to fetch weather: {e}"
 
+def check_unread_emails() -> str:
+    """Checks the user's Gmail account for unread emails and returns a summary."""
+    username = os.getenv("GMAIL_ADDRESS")
+    password = os.getenv("GMAIL_APP_PASSWORD")
+    
+    if not username or not password:
+        return "Email credentials are not set in the .env file."
+        
+    try:
+        mail = imaplib.IMAP4_SSL("imap.gmail.com")
+        mail.login(username, password)
+        mail.select("inbox")
+        
+        status, messages = mail.search(None, "UNSEEN")
+        email_ids = messages[0].split()
+        
+        if not email_ids:
+            return "You have zero unread emails."
+            
+        recent_ids = email_ids[-3:] # Get up to 3 most recent
+        response = f"You have {len(email_ids)} unread emails. Here are the latest:\n"
+        
+        for e_id in recent_ids:
+            res, msg_data = mail.fetch(e_id, "(RFC822)")
+            for response_part in msg_data:
+                if isinstance(response_part, tuple):
+                    msg = email.message_from_bytes(response_part[1])
+                    subject, encoding = decode_header(msg["Subject"])[0]
+                    if isinstance(subject, bytes):
+                        subject = subject.decode(encoding if encoding else "utf-8")
+                    
+                    sender = msg.get("From")
+                    response += f"- From: {sender} | Subject: {subject}\n"
+                    
+        mail.logout()
+        return response
+    except Exception as e:
+        return f"Failed to check emails: {e}"
+
 # List of tools available to Ultron's Brain
-ultron_tools = [open_website, execute_system_command, get_system_time, search_wikipedia, search_internet, get_weather]
+ultron_tools = [open_website, execute_system_command, get_system_time, search_wikipedia, search_internet, get_weather, check_unread_emails]
