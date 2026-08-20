@@ -26,6 +26,20 @@ async def get_dashboard():
         return FileResponse(html_path)
     return HTMLResponse("<h1>Error: static/index.html not found.</h1>")
 
+@app.get("/api/logs")
+async def get_logs():
+    """Streams the background log file to the UI."""
+    log_file = os.path.join(os.path.dirname(__file__), "..", "ultron_background.log")
+    if not os.path.exists(log_file):
+        return JSONResponse(content={"logs": "[SYSTEM] No background logs found."})
+    
+    try:
+        with open(log_file, "r") as f:
+            lines = f.readlines()
+            return JSONResponse(content={"logs": "".join(lines[-25:])})
+    except Exception as e:
+        return JSONResponse(content={"logs": f"[ERROR] Could not read logs: {e}"})
+
 @app.post("/api/verify")
 async def verify_password(req: VerifyRequest):
     correct_password = os.getenv("ULTRON_PASSWORD", "ironman")

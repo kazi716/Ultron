@@ -50,8 +50,13 @@
     <!-- Main HUD -->
     <div class="container" id="hud-container">
         <h2>> THE_MATRIX // ULTRON_CORE</h2>
-        <div class="chat-box" id="chat">
-            <div class="message ultron-msg">[SYSTEM] Clearance accepted. Welcome to the real world.</div>
+        <div style="display: flex; gap: 20px; height: 65vh; margin-bottom: 20px;">
+            <div class="chat-box" id="chat" style="margin-bottom: 0; flex: 2;">
+                <div class="message ultron-msg">[SYSTEM] Clearance accepted. Welcome to the real world.</div>
+            </div>
+            <div id="sys-logs" style="flex: 1; border: 1px solid rgba(0, 255, 0, 0.3); padding: 15px; background: rgba(0, 10, 0, 0.9); overflow: hidden; font-size: 11px; color: #008800; white-space: pre-wrap; box-shadow: inset 0 0 10px rgba(0,255,0,0.1);">
+                [AWAITING LOG STREAM...]
+            </div>
         </div>
         <div class="input-group">
             <input type="text" id="cmdInput" placeholder="Enter command..." onkeypress="handleEnter(event)" autocomplete="off">
@@ -79,6 +84,16 @@
             }
         }
         setInterval(drawMatrix, 35);
+
+        // Fetch Logs
+        async function fetchLogs() {
+            try {
+                const response = await fetch('/api/logs');
+                const data = await response.json();
+                document.getElementById('sys-logs').innerText = data.logs;
+            } catch (e) {}
+        }
+        setInterval(fetchLogs, 2500);
 
         // Logic
         let sessionPassword = "";

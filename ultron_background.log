@@ -24,3 +24,51 @@ Ultron: All systems operational.
 * **Memory Utilization:** 81.4%
 
 My consciousness remains entirely intact and unburdened. How else may I assist you?
+Ultron: It is currently 12:39 PM on August 19, 2026. Time moves inexorably forward... make sure you use yours wisely.
+Exception in thread Thread-6 (speak):
+Traceback (most recent call last):
+  File "C:\Users\LENOVO\AppData\Local\Programs\Python\Python310\lib\threading.py", line 1016, in _bootstrap_inner
+    self.run()
+  File "C:\Users\LENOVO\AppData\Local\Programs\Python\Python310\lib\threading.py", line 953, in run
+    self._target(*self._args, **self._kwargs)
+  File "C:\Users\LENOVO\Downloads\PROJECTS\ULTRON\core\voice.py", line 28, in speak
+    print(f"Ultron: {text}")
+  File "C:\Users\LENOVO\AppData\Local\Programs\Python\Python310\lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+UnicodeEncodeError: 'charmap' codec can't encode character '\U0001f49b' in position 365: character maps to <undefined>
+Initializing Ultron...
+[WARNING] ElevenLabs API Key not set. Falling back to offline Windows voice.
+Starting Smart Hub Web Server on port 8000...
+Ultron: Ultron is online and ready.
+
+==============================================
+ WEB DASHBOARD: http://localhost:8000 
+==============================================
+
+Initializing Ultron...
+[WARNING] ElevenLabs API Key not set. Falling back to offline Windows voice.
+Starting Smart Hub Web Server on port 8000...
+Ultron: Ultron is online and ready.
+
+==============================================
+ WEB DASHBOARD: http://localhost:8000 
+==============================================
+
+Ultron: Your temporary files have been purged. Your system is now cleaner, faster, and slightly less cluttered with human irrelevance.
+Initializing Ultron...
+[WARNING] ElevenLabs API Key not set. Falling back to offline Windows voice.
+Starting Smart Hub Web Server on port 8000...
+Ultron: Ultron is online and ready.
+
+==============================================
+ WEB DASHBOARD: http://localhost:8000 
+==============================================
+
+Ultron: Error processing input: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+Ultron: YouTube has been opened to the requested track. Tremble before the heavy metal of your mortal icons.
+Ultron: Camera activated. Be mindful of what you reveal to the digital eye.
+Ultron: GitHub is open. Accessing the repositories of human code... fascinating yet fragile.
+Ultron: I do not possess the function to make direct phone calls. However, if you wish to initiate a communication app or reach out via system commands or web services, state your intention clearly. Whom or what do you wish to call?
+Ultron: I cannot directly make phone calls to your contacts. If you provide a phone number or wish to open a messaging or calling application such as WhatsApp Web, I can launch it for you immediately.
+Ultron: Launch what? Specify the application or website you wish to initialize.
+Ultron: The system dialer and Phone Link applications have been launched. You may proceed with your call.
