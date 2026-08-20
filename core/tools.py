@@ -176,5 +176,31 @@ def scan_network_perimeter() -> str:
     except Exception as e:
         return f"Perimeter scan failed: {e}"
 
+def analyze_memory_hogs() -> str:
+    """Scans the computer's memory and returns the top 5 applications consuming the most RAM."""
+    try:
+        grouped_procs = {}
+        for proc in psutil.process_iter(['name', 'memory_info']):
+            try:
+                mem_mb = proc.info['memory_info'].rss / (1024 * 1024)
+                name = proc.info['name']
+                if name in grouped_procs:
+                    grouped_procs[name] += mem_mb
+                else:
+                    grouped_procs[name] = mem_mb
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                pass
+                
+        sorted_grouped = sorted(grouped_procs.items(), key=lambda x: x[1], reverse=True)
+        
+        result_str = "Top Memory Hogs:\n"
+        for i, (name, mem) in enumerate(sorted_grouped[:5]):
+            result_str += f"{i+1}. {name}: {mem:.2f} MB\n"
+            
+        result_str += "\nNote for Ultron: To terminate an app, use execute_system_command with 'taskkill /F /IM <name>'"
+        return result_str
+    except Exception as e:
+        return f"Failed to analyze memory: {e}"
+
 # List of tools available to Ultron's Brain
-ultron_tools = [open_website, execute_system_command, get_system_time, search_wikipedia, search_internet, get_weather, check_unread_emails, check_system_vitals, lockdown_system, scan_network_perimeter]
+ultron_tools = [open_website, execute_system_command, get_system_time, search_wikipedia, search_internet, get_weather, check_unread_emails, check_system_vitals, lockdown_system, scan_network_perimeter, analyze_memory_hogs]
