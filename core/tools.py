@@ -8,6 +8,7 @@ from duckduckgo_search import DDGS
 import imaplib
 import email
 from email.header import decode_header
+import psutil
 
 def open_website(url: str) -> str:
     """Opens a website in the default browser. Ensure the URL starts with http:// or https://."""
@@ -137,5 +138,25 @@ def check_unread_emails() -> str:
     except Exception as e:
         return f"Failed to check emails: {e}"
 
+def check_system_vitals() -> str:
+    """Checks the computer's CPU usage, RAM usage, and Battery life."""
+    try:
+        cpu_usage = psutil.cpu_percent(interval=0.5)
+        
+        memory = psutil.virtual_memory()
+        ram_usage = memory.percent
+        ram_total = round(memory.total / (1024 ** 3), 2)
+        
+        battery = psutil.sensors_battery()
+        if battery:
+            plugged = "Plugged In" if battery.power_plugged else "Discharging"
+            battery_info = f"{battery.percent}% ({plugged})"
+        else:
+            battery_info = "No battery detected"
+            
+        return f"CPU Usage: {cpu_usage}%\nRAM Usage: {ram_usage}% of {ram_total}GB\nBattery: {battery_info}"
+    except Exception as e:
+        return f"Failed to read system vitals: {e}"
+
 # List of tools available to Ultron's Brain
-ultron_tools = [open_website, execute_system_command, get_system_time, search_wikipedia, search_internet, get_weather, check_unread_emails]
+ultron_tools = [open_website, execute_system_command, get_system_time, search_wikipedia, search_internet, get_weather, check_unread_emails, check_system_vitals]
