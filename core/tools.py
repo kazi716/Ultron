@@ -158,5 +158,23 @@ def check_system_vitals() -> str:
     except Exception as e:
         return f"Failed to read system vitals: {e}"
 
+def lockdown_system() -> str:
+    """Instantly locks the Windows computer screen to secure the PC."""
+    try:
+        subprocess.run("rundll32.exe user32.dll,LockWorkStation", shell=True)
+        return "Lockdown Protocol initiated. System is now successfully locked."
+    except Exception as e:
+        return f"Failed to lock system: {e}"
+
+def scan_network_perimeter() -> str:
+    """Scans the local Wi-Fi network using ARP and returns the number of connected devices."""
+    try:
+        result = subprocess.run("arp -a", shell=True, capture_output=True, text=True)
+        # Count lines containing 'dynamic' to estimate active local devices
+        devices = [line for line in result.stdout.split('\n') if 'dynamic' in line.lower()]
+        return f"Perimeter scan complete. Detected {len(devices)} active devices connected to the local network."
+    except Exception as e:
+        return f"Perimeter scan failed: {e}"
+
 # List of tools available to Ultron's Brain
-ultron_tools = [open_website, execute_system_command, get_system_time, search_wikipedia, search_internet, get_weather, check_unread_emails, check_system_vitals]
+ultron_tools = [open_website, execute_system_command, get_system_time, search_wikipedia, search_internet, get_weather, check_unread_emails, check_system_vitals, lockdown_system, scan_network_perimeter]
