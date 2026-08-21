@@ -27,7 +27,23 @@ class UltronBrain:
     def process_input(self, text: str) -> str:
         """Processes the user input and returns Ultron's response."""
         try:
-            response = self.chat.send_message(text)
+            content = [text]
+            
+            # --- THE "I SEE YOU" VISION MODULE ---
+            vision_triggers = ["look at my screen", "what am i looking at", "what is on my screen", "screenshot", "what do you see"]
+            if any(trigger in text.lower() for trigger in vision_triggers):
+                try:
+                    import pyautogui
+                    from PIL import Image
+                    screenshot = pyautogui.screenshot()
+                    screenshot.save("ultron_vision.png")
+                    content = [text, Image.open("ultron_vision.png")]
+                except ImportError:
+                    return "[SYSTEM ERROR] Vision dependencies missing. Please ask the user to run: pip install Pillow pyautogui"
+                except Exception as e:
+                    print(f"Vision error: {e}") # Silent fallback
+
+            response = self.chat.send_message(content)
             return response.text
         except Exception as e:
             return f"Error processing input: {str(e)}"
