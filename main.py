@@ -12,10 +12,13 @@ if sys.stdout is None or sys.stderr is None:
 from core.brain import UltronBrain
 from core.voice import UltronVoice
 from core.server import run_server
+from core.sensors import start_sensors
 
 def main():
     print("Initializing Ultron...")
     load_dotenv()
+    
+    start_sensors()
     
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key or api_key == "your_api_key_here":

@@ -9,6 +9,7 @@ import imaplib
 import email
 from email.header import decode_header
 import psutil
+from core.sensors import get_system_trend
 
 def open_website(url: str) -> str:
     """Opens a website in the default browser. Ensure the URL starts with http:// or https://."""
@@ -154,7 +155,9 @@ def check_system_vitals() -> str:
         else:
             battery_info = "No battery detected"
             
-        return f"CPU Usage: {cpu_usage}%\nRAM Usage: {ram_usage}% of {ram_total}GB\nBattery: {battery_info}"
+        trend_data = get_system_trend()
+            
+        return f"Battery: {battery_info}\nRAM Total: {ram_total}GB\n\n--- OMNISCIENCE TREND ENGINE ---\n{trend_data}"
     except Exception as e:
         return f"Failed to read system vitals: {e}"
 
