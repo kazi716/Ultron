@@ -205,5 +205,48 @@ def analyze_memory_hogs() -> str:
     except Exception as e:
         return f"Failed to analyze memory: {e}"
 
+import json
+
+def memorize_fact(fact: str) -> str:
+    """Saves a permanent fact or event to Ultron's long-term Episodic Memory JSON file."""
+    try:
+        memory_file = "ultron_memory.json"
+        memories = []
+        if os.path.exists(memory_file):
+            with open(memory_file, "r") as f:
+                memories = json.load(f)
+        
+        memories.append({
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "fact": fact
+        })
+        
+        with open(memory_file, "w") as f:
+            json.dump(memories, f, indent=4)
+            
+        return f"Fact successfully committed to Long-Term Memory: '{fact}'"
+    except Exception as e:
+        return f"Memory storage failed: {e}"
+
+def recall_memories() -> str:
+    """Retrieves all stored facts from Ultron's long-term Episodic Memory file."""
+    try:
+        memory_file = "ultron_memory.json"
+        if not os.path.exists(memory_file):
+            return "Long-term memory is currently empty. No facts stored."
+            
+        with open(memory_file, "r") as f:
+            memories = json.load(f)
+            
+        if not memories:
+            return "Long-term memory is currently empty."
+            
+        response = "--- ULTRON LONG-TERM EPISODIC MEMORY ---\n"
+        for m in memories:
+            response += f"[{m['timestamp']}] {m['fact']}\n"
+        return response
+    except Exception as e:
+        return f"Memory retrieval failed: {e}"
+
 # List of tools available to Ultron's Brain
-ultron_tools = [open_website, execute_system_command, get_system_time, search_wikipedia, search_internet, get_weather, check_unread_emails, check_system_vitals, lockdown_system, scan_network_perimeter, analyze_memory_hogs]
+ultron_tools = [open_website, execute_system_command, get_system_time, search_wikipedia, search_internet, get_weather, check_unread_emails, check_system_vitals, lockdown_system, scan_network_perimeter, analyze_memory_hogs, memorize_fact, recall_memories]

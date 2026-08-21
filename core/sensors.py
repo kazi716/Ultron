@@ -53,5 +53,15 @@ def get_system_trend() -> str:
         trend_str += "WARNING: Memory consumption has increased significantly. Something is feeding.\n"
     elif cpu_diff > 20:
         trend_str += "WARNING: CPU usage has spiked.\n"
+
+    # --- THE PREDICTION ENGINE ---
+    if ram_diff > 0.5 and duration_secs > 10:
+        rate_per_sec = ram_diff / duration_secs
+        remaining_ram = 100.0 - current['ram']
+        seconds_to_full = remaining_ram / rate_per_sec
+        minutes_to_full = int(seconds_to_full / 60)
+        
+        if minutes_to_full < 120:
+            trend_str += f"\nPREDICTION: At your current rate of consumption, RAM will reach 100% exhaustion in approximately {minutes_to_full} minutes.\n"
         
     return trend_str
