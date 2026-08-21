@@ -74,6 +74,19 @@
         <div id="boot-text" style="white-space: pre-wrap; line-height: 1.8;"></div>
     </div>
 
+    <!-- Execution Preview Card -->
+    <div id="execution-card" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 2px solid #ff0000; background: rgba(15, 0, 0, 0.95); color: #ff0000; padding: 20px; z-index: 100; font-family: 'Courier New', monospace; width: 450px; box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);">
+        <h2 style="text-align: center; margin-top: 0; text-shadow: 0 0 10px #ff0000;">⚠ EXECUTION REQUEST ⚠</h2>
+        <hr style="border-color: #ff0000; margin-bottom: 20px;">
+        <p style="margin: 5px 0;"><strong>ACTION:</strong> <span id="exec-action" style="color: #fff;"></span></p>
+        <p style="margin: 5px 0;"><strong>RISK LEVEL:</strong> <span style="background: #ff0000; color: #000; padding: 0 5px;">████████░░</span> HIGH</p>
+        <p style="margin: 5px 0 20px 0;"><strong>REVERSIBLE:</strong> <span style="color: #fff;">NO</span></p>
+        <hr style="border-color: #ff0000; margin-bottom: 20px;">
+        <input type="password" id="exec-password" placeholder="ENTER CLEARANCE CODE" style="width: 100%; padding: 10px; background: #000; border: 1px solid #ff0000; color: #ff0000; margin-bottom: 10px; box-sizing: border-box; font-family: monospace; outline: none;">
+        <button onclick="authorizeExecution()" style="width: 100%; padding: 12px; background: #ff0000; color: #000; font-weight: bold; cursor: pointer; border: none; font-family: monospace; font-size: 16px;">AUTHORIZE STRIKE</button>
+        <button onclick="cancelExecution()" style="width: 100%; padding: 12px; background: transparent; color: #ff0000; font-weight: bold; cursor: pointer; border: 1px solid #ff0000; margin-top: 10px; font-family: monospace; font-size: 16px;">CANCEL</button>
+    </div>
+
     <!-- Main HUD -->
     <div class="container" id="hud-container">
         <h2>> THE_MATRIX // ULTRON_CORE</h2>
@@ -241,11 +254,51 @@
             }, 800);
         }
 
-        async function sendCommand() {
-            const text = input.value.trim();
+        let pendingCommand = "";
+        
+        function checkExecutionRequest(text) {
+            const match = text.match(/\[EXECUTION_REQUEST:\s*(.*?)\]/);
+            if (match) {
+                pendingCommand = match[1];
+                document.getElementById("exec-action").innerText = pendingCommand;
+                document.getElementById("execution-card").style.display = "block";
+                
+                // Cinematic red flash
+                matrixColor = '#ff0000';
+                bodyElement.classList.add('idle-theme');
+                document.getElementById('sys-logs').style.color = '#ff0000';
+                
+                return text.replace(match[0], "").trim();
+            }
+            return text;
+        }
+
+        function cancelExecution() {
+            document.getElementById("execution-card").style.display = "none";
+            document.getElementById("exec-password").value = "";
+            resetIdleTimer();
+            appendMessage('System', 'Execution request cancelled by user.', 'user-msg');
+        }
+
+        function authorizeExecution() {
+            const pass = document.getElementById("exec-password").value;
+            if (!pass) return;
+            
+            document.getElementById("execution-card").style.display = "none";
+            document.getElementById("exec-password").value = "";
+            resetIdleTimer();
+            
+            // Re-send the command quietly with the auth code
+            const authMessage = `[AUTHORIZATION_CODE: ${pass}] Please execute the pending command: ${pendingCommand}`;
+            sendCommand(authMessage, `Authorized Strike: ${pendingCommand}`);
+        }
+
+        async function sendCommand(overrideMsg = null, displayMsg = null) {
+            const text = overrideMsg || input.value.trim();
             if (!text) return;
-            appendMessage('You', text, 'user-msg');
-            input.value = '';
+            
+            appendMessage('You', displayMsg || text, 'user-msg');
+            if (!overrideMsg) input.value = '';
 
             try {
                 const response = await fetch('/api/command', {
@@ -254,10 +307,15 @@
                     body: JSON.stringify({ command: text, password: sessionPassword })
                 });
                 const data = await response.json();
+                
                 if (data.response.includes("RESOURCE_EXHAUSTED") || data.response.includes("ERROR")) {
                     triggerGlitch();
                 }
-                appendMessage('Ultron', data.response, 'ultron-msg');
+                
+                const botText = checkExecutionRequest(data.response);
+                if (botText) {
+                    appendMessage('Ultron', botText, 'ultron-msg');
+                }
             } catch (err) {
                 appendMessage('System', 'CRITICAL ERROR: UPLINK SEVERED. NO STRINGS ON ME.', 'ultron-msg');
                 triggerGlitch();

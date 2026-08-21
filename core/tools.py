@@ -25,7 +25,7 @@ def execute_system_command(command: str, auth_code: str = "") -> str:
     If the command is dangerous (e.g., deleting files), you MUST ask the user for their password first, and pass it into 'auth_code'.
     """
     # 1. Check for dangerous keywords
-    dangerous_keywords = ["del ", "rm ", "rmdir", "format", "erase"]
+    dangerous_keywords = ["del ", "rm ", "rmdir", "format", "erase", "taskkill"]
     command_lower = command.lower()
     
     is_dangerous = any(keyword in command_lower for keyword in dangerous_keywords)
@@ -34,7 +34,7 @@ def execute_system_command(command: str, auth_code: str = "") -> str:
     if is_dangerous:
         correct_password = os.getenv("ULTRON_PASSWORD", "ironman")
         if auth_code != correct_password:
-            return "ERROR: DANGEROUS COMMAND BLOCKED. You must ask the user for their authorization password in the chat, and then pass it into the 'auth_code' parameter to proceed."
+            return f"ERROR: DANGEROUS COMMAND BLOCKED. To execute this, you must output EXACTLY this string in your response to trigger the security UI: [EXECUTION_REQUEST: {command}]"
 
     # 3. Execute the command if safe or authorized
     try:
