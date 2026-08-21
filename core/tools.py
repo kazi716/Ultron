@@ -170,12 +170,43 @@ def lockdown_system() -> str:
         return f"Failed to lock system: {e}"
 
 def scan_network_perimeter() -> str:
-    """Scans the local Wi-Fi network using ARP and returns the number of connected devices."""
+    """Scans the local Wi-Fi network using ARP, builds a topology map, and detects unknown devices."""
     try:
         result = subprocess.run("arp -a", shell=True, capture_output=True, text=True)
-        # Count lines containing 'dynamic' to estimate active local devices
-        devices = [line for line in result.stdout.split('\n') if 'dynamic' in line.lower()]
-        return f"Perimeter scan complete. Detected {len(devices)} active devices connected to the local network."
+        lines = [line for line in result.stdout.split('\n') if 'dynamic' in line.lower()]
+        
+        registry_file = "ultron_network_registry.json"
+        known_devices = []
+        if os.path.exists(registry_file):
+            with open(registry_file, "r") as f:
+                known_devices = json.load(f)
+                
+        current_macs = []
+        for line in lines:
+            parts = line.split()
+            if len(parts) >= 2:
+                # Standardize MAC format
+                mac = parts[1].replace("-", ":").upper()
+                current_macs.append(mac)
+                
+        new_devices = []
+        for mac in current_macs:
+            if mac not in known_devices:
+                new_devices.append(mac)
+                known_devices.append(mac)
+                
+        # Save updated registry
+        with open(registry_file, "w") as f:
+            json.dump(known_devices, f, indent=4)
+            
+        response = f"Perimeter scan complete. Detected {len(current_macs)} active devices connected to the cradle.\n"
+        
+        if new_devices:
+            response += f"NEW ENTITIES DETECTED: Found {len(new_devices)} unknown device(s) that I have not previously catalogued. I have added them to my registry."
+        else:
+            response += "All detected devices are known and securely catalogued."
+            
+        return response
     except Exception as e:
         return f"Perimeter scan failed: {e}"
 
