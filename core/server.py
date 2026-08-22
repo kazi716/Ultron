@@ -66,6 +66,15 @@ async def process_command(request: CommandRequest):
         
     return JSONResponse({"response": response_text})
 
+@app.get("/api/triggers")
+async def get_triggers():
+    """Returns any pending autonomous alerts from the sensor trigger queue."""
+    from core.sensors import trigger_queue, incident_mode
+    alerts = []
+    while trigger_queue:
+        alerts.append(trigger_queue.popleft())
+    return JSONResponse({"alerts": alerts, "incident_mode": incident_mode})
+
 def run_server(brain, voice, port=8000):
     """Starts the FastAPI server with references to the brain and voice."""
     global ultron_brain, ultron_voice

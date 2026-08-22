@@ -1,0 +1,20 @@
+{
+    "AC:10:07:02:C4:F7": {
+        "status": "UNKNOWN",
+        "first_seen": "2026-08-22 10:03:28",
+        "last_seen": "2026-08-22 10:09:55",
+        "times_seen": 2
+    },
+    "F6:AB:A1:7E:25:CD": {
+        "status": "UNKNOWN",
+        "first_seen": "2026-08-22 10:03:28",
+        "last_seen": "2026-08-22 10:09:55",
+        "times_seen": 2
+    },
+    "1C:CE:51:14:59:39": {
+        "status": "UNKNOWN",
+        "first_seen": "2026-08-22 10:03:28",
+        "last_seen": "2026-08-22 10:09:55",
+        "times_seen": 2
+    }
+}

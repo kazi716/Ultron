@@ -1,39 +1,83 @@
 import psutil
 import time
 import threading
+from collections import deque
 
 system_history = []
 _baseline = {"cpu_avg": None, "ram_avg": None, "samples": 0}
+
+# ─── AUTONOMOUS TRIGGER SYSTEM ────────────────────────────────────────────────
+# Queue of proactive alert strings that main.py can poll and push to the HUD
+trigger_queue = deque(maxlen=10)
+incident_mode = False          # True when multiple anomalies fire together
+_ram_alert_streak = 0          # consecutive cycles above threshold
+
+def _evaluate_triggers(cpu: float, mem: float):
+    """
+    Level 0 autonomous trigger evaluation.
+    Runs every 10 seconds. No Gemini call — pure Python decision logic.
+    """
+    global incident_mode, _ram_alert_streak
+
+    anomalies = []
+
+    # RAM threshold trigger
+    if mem > 90:
+        _ram_alert_streak += 1
+        if _ram_alert_streak >= 3:
+            anomalies.append(f"RAM has been above 90% for {_ram_alert_streak} consecutive cycles ({mem:.1f}%)")
+    else:
+        _ram_alert_streak = 0
+
+    # CPU spike trigger
+    if cpu > 95:
+        anomalies.append(f"CPU has spiked to {cpu:.1f}%")
+
+    # Baseline anomaly trigger (only after baseline is calibrated)
+    if _baseline["ram_avg"] and (mem - _baseline["ram_avg"]) > 20:
+        anomalies.append(f"RAM is {mem - _baseline['ram_avg']:.1f}% above learned baseline ({_baseline['ram_avg']:.1f}%)")
+
+    # Incident mode: multiple simultaneous anomalies
+    if len(anomalies) >= 2:
+        incident_mode = True
+        alert = "⚠ INCIDENT PROTOCOL ACTIVE: " + " | ".join(anomalies)
+    elif len(anomalies) == 1:
+        incident_mode = False
+        alert = f"AUTONOMOUS ALERT: {anomalies[0]}"
+    else:
+        incident_mode = False
+        return  # No anomalies — stay silent
+
+    trigger_queue.append({"type": "ALERT", "message": alert, "incident": incident_mode})
+
 
 def _sensor_loop():
     while True:
         try:
             cpu = psutil.cpu_percent(interval=0.1)
             mem = psutil.virtual_memory().percent
-            
-            state = {
-                "timestamp": time.time(),
-                "cpu": cpu,
-                "ram": mem
-            }
-            
+
+            state = {"timestamp": time.time(), "cpu": cpu, "ram": mem}
             system_history.append(state)
             if len(system_history) > 60:
                 system_history.pop(0)
 
-            # Update rolling baseline (exponential moving average)
+            # Update rolling baseline
             if _baseline["cpu_avg"] is None:
                 _baseline["cpu_avg"] = cpu
                 _baseline["ram_avg"] = mem
             else:
-                alpha = 0.05  # slow-moving average to learn "normal"
+                alpha = 0.05
                 _baseline["cpu_avg"] = alpha * cpu + (1 - alpha) * _baseline["cpu_avg"]
                 _baseline["ram_avg"] = alpha * mem + (1 - alpha) * _baseline["ram_avg"]
             _baseline["samples"] += 1
 
+            # Run autonomous trigger evaluation every cycle
+            _evaluate_triggers(cpu, mem)
+
         except Exception:
             pass
-            
+
         time.sleep(10)
 
 def start_sensors():

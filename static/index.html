@@ -87,6 +87,23 @@
         <button onclick="cancelExecution()" style="width: 100%; padding: 12px; background: transparent; color: #ff0000; font-weight: bold; cursor: pointer; border: 1px solid #ff0000; margin-top: 10px; font-family: monospace; font-size: 16px;">CANCEL</button>
     </div>
 
+    <!-- Incident Mode Banner -->
+    <div id="incident-banner" style="display: none; position: fixed; top: 0; left: 0; width: 100%; background: rgba(180,0,0,0.92); color: #fff; text-align: center; font-family: 'Courier New', monospace; font-size: 14px; font-weight: bold; padding: 8px 0; z-index: 200; letter-spacing: 2px; text-shadow: 0 0 8px #ff0000; animation: pulse-red 1s infinite;">
+        ⚠ INCIDENT PROTOCOL ACTIVE — MULTIPLE SYSTEM ANOMALIES DETECTED ⚠
+    </div>
+
+    <!-- Cognitive State Panel (shown on autonomous alerts) -->
+    <div id="cognitive-panel" style="display: none; position: fixed; bottom: 80px; right: 20px; border: 1px solid #ff0000; background: rgba(10,0,0,0.95); color: #ff4444; font-family: 'Courier New', monospace; font-size: 12px; padding: 14px; width: 280px; z-index: 150; box-shadow: 0 0 20px rgba(255,0,0,0.3);">
+        <div style="color: #ff0000; font-weight: bold; margin-bottom: 8px; letter-spacing: 1px;">▶ ULTRON COGNITIVE STATE</div>
+        <hr style="border-color: #ff0000; margin: 6px 0;">
+        <div id="cognitive-objective" style="color: #fff; margin-bottom: 6px;"></div>
+        <div id="cognitive-message" style="color: #ff8888; font-size: 11px; line-height: 1.5;"></div>
+        <div style="margin-top: 10px; text-align: right;">
+            <span style="color: #555; font-size: 10px;">AUTONOMOUS / SAFE</span>
+            <button onclick="dismissCognitivePanel()" style="background: none; border: 1px solid #ff0000; color: #ff0000; cursor: pointer; font-size: 10px; padding: 2px 8px; margin-left: 8px; font-family: monospace;">DISMISS</button>
+        </div>
+    </div>
+
     <!-- Main HUD -->
     <div class="container" id="hud-container">
         <h2>> THE_MATRIX // ULTRON_CORE</h2>
@@ -322,6 +339,34 @@
             }
         }
         function handleEnter(e) { if (e.key === 'Enter') sendCommand(); }
+
+        // ── AUTONOMOUS TRIGGER POLLER ────────────────────────────────────────
+        function dismissCognitivePanel() {
+            document.getElementById('cognitive-panel').style.display = 'none';
+        }
+
+        async function pollTriggers() {
+            try {
+                const res = await fetch('/api/triggers');
+                const data = await res.json();
+                if (data.alerts && data.alerts.length > 0) {
+                    data.alerts.forEach(alert => {
+                        appendMessage('ULTRON [AUTO]', alert.message, 'ultron-msg');
+                        document.getElementById('cognitive-objective').innerText = 'AUTONOMOUS MONITORING';
+                        document.getElementById('cognitive-message').innerText = alert.message;
+                        document.getElementById('cognitive-panel').style.display = 'block';
+                        triggerGlitch();
+                    });
+                }
+                if (data.incident_mode) {
+                    document.getElementById('incident-banner').style.display = 'block';
+                    matrixColor = '#ff0000';
+                } else {
+                    document.getElementById('incident-banner').style.display = 'none';
+                }
+            } catch (e) { /* silent fail */ }
+        }
+        setInterval(pollTriggers, 15000);
     </script>
 </body>
 </html>
