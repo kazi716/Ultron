@@ -64,22 +64,32 @@ class UltronBrain:
             # sends back "[AUTHORIZATION_CODE: xxxx] Please execute the pending command: ..."
             if "[AUTHORIZATION_CODE:" in text:
                 import re
-                match = re.search(
-                    r"\[AUTHORIZATION_CODE: (.*?)\] Please execute the pending command: (.*?)(\|ACTION_ID:(.*?))?$",
-                    text
-                )
-                if match:
-                    auth_code = match.group(1).strip()
-                    cmd_str   = match.group(2).strip()
-                    action_id = match.group(4).strip() if match.group(4) else ""
+                # Split approach — much more reliable than nested non-greedy capture
+                auth_match = re.search(r"\[AUTHORIZATION_CODE: (.+?)\] Please execute the pending command: (.+)$", text)
+                if auth_match:
+                    auth_code    = auth_match.group(1).strip()
+                    pending_full = auth_match.group(2).strip()
+                    # pending_full may be "lockdown_system|ACTION_ID:A-E44B"
+                    if "|ACTION_ID:" in pending_full:
+                        cmd_str, action_id = pending_full.split("|ACTION_ID:", 1)
+                        cmd_str   = cmd_str.strip()
+                        action_id = action_id.strip()
+                    else:
+                        cmd_str   = pending_full
+                        action_id = ""
+
                     tool_name = cmd_str
                     args      = {}
                     if " " in cmd_str or "/" in cmd_str:
                         tool_name = "execute_system_command"
                         args      = {"command": cmd_str}
+
                     from core.orchestrator import execute_tool
                     result = execute_tool(tool_name, args, auth_code=auth_code, bound_action_id=action_id)
-                    text = f"User authorized action {action_id}. Report back the result: {result.summary}"
+                    # Update heartbeat to OPERATIONAL now that recovery is being handled
+                    from core.state import update_heartbeat
+                    update_heartbeat(status="OPERATIONAL", current_goal=None)
+                    text = f"User authorized action {action_id}. Report back the result in your Ultron voice: {result.summary}"
 
             content = [text]
 

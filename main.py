@@ -32,6 +32,17 @@ def main():
             "last_step": checkpoint.get("current_step", 0)
         })
         update_heartbeat(status="RECOVERING", current_goal=checkpoint["objective"])
+
+        # Auto-clear RECOVERING after 30s — Ultron can't resume mid-chat history anyway
+        import threading
+        def _auto_clear_recovery():
+            import time
+            time.sleep(30)
+            from core.state import clear_checkpoint
+            clear_checkpoint()
+            update_heartbeat(status="OPERATIONAL", current_goal=None)
+            print("[RECOVERY] Recovery window expired. Status: OPERATIONAL.")
+        threading.Thread(target=_auto_clear_recovery, daemon=True).start()
     else:
         update_heartbeat(status="OPERATIONAL")
     # ─────────────────────────────────────────────────────────────────────────
