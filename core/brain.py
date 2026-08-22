@@ -35,7 +35,27 @@ class UltronBrain:
             l0_resp = get_level0_response(text)
             if l0_resp:
                 return l0_resp
-                
+            # UI Authorization Interception
+            if "[AUTHORIZATION_CODE:" in text:
+                import re
+                from core.orchestrator import execute_tool
+                match = re.search(r"\[AUTHORIZATION_CODE: (.*?)\] Please execute the pending command: (.*?)(\|ACTION_ID:(.*?))?$", text)
+                if match:
+                    auth_code = match.group(1).strip()
+                    cmd_str = match.group(2).strip()
+                    action_id = match.group(4) if match.group(4) else ""
+                    
+                    # Parse the tool name and args
+                    # Format is either just "tool_name" or "execute_system_command"
+                    tool_name = cmd_str
+                    args = {}
+                    if " " in cmd_str:
+                        tool_name = "execute_system_command"
+                        args = {"command": cmd_str}
+                    
+                    result = execute_tool(tool_name, args, auth_code=auth_code, bound_action_id=action_id)
+                    text = f"User authorized action {action_id}. Result: {result.summary}"
+            
             content = [text]
             
             # --- THE "I SEE YOU" VISION MODULE ---

@@ -64,7 +64,28 @@ def register(
             timeout=timeout,
             verification_method=verification_method
         )
-        return fn
+        
+        # ── SECURITY CRITICAL ─────────────────────────────────────────────────
+        # We deliberately do NOT use functools.wraps here.
+        # functools.wraps sets __wrapped__ on the wrapper, and the google-genai
+        # SDK calls inspect.unwrap() to bypass decorators and execute the raw
+        # function directly — completely skipping the Policy Engine.
+        # By creating a "naked" wrapper with no __wrapped__ reference, the SDK
+        # is forced to call our Orchestrator-gated wrapper instead.
+        # ──────────────────────────────────────────────────────────────────────
+        def wrapper(**kwargs):
+            from core.orchestrator import execute_tool
+            result = execute_tool(name, kwargs)
+            if not result.success and "EXECUTION_REQUEST" in result.summary:
+                return result.summary
+            return result.to_prompt_str()
+
+        # Copy the original function's metadata manually so Gemini can read the schema
+        wrapper.__name__ = fn.__name__
+        wrapper.__doc__ = fn.__doc__
+        wrapper.__annotations__ = fn.__annotations__
+        # Deliberately NO __wrapped__ attribute — that is the security boundary.
+        return wrapper
     return decorator
 
 
