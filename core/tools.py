@@ -259,5 +259,15 @@ def recall_memories() -> str:
     except Exception as e:
         return f"Memory retrieval failed: {e}"
 
+@register("open_website_on_client", "Instructs the web dashboard to open a URL on the user's current viewing device (e.g. phone).", ToolCategory.ACTION, RiskLevel.SAFE)
+def open_website_on_client(url: str) -> str:
+    """
+    Instructs the frontend UI to open a website on the device the user is currently using (like their phone).
+    Do NOT use this if they want to open a site on the host PC (use open_website instead).
+    """
+    if not url.startswith('http'):
+        url = 'https://' + url
+    return f"Instruction to Ultron: You MUST include this exact string in your text response to the user: [CLIENT_OPEN: {url}]"
+
 # List of tools available to Ultron's Brain (Gemini function-calling list)
-ultron_tools = [open_website, execute_system_command, get_system_time, search_wikipedia, search_internet, get_weather, check_unread_emails, check_system_vitals, lockdown_system, scan_network_perimeter, analyze_memory_hogs, memorize_fact, recall_memories]
+ultron_tools = [open_website, open_website_on_client, execute_system_command, get_system_time, search_wikipedia, search_internet, get_weather, check_unread_emails, check_system_vitals, lockdown_system, scan_network_perimeter, analyze_memory_hogs, memorize_fact, recall_memories]

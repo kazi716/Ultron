@@ -290,6 +290,16 @@
             return text;
         }
 
+        function checkClientCommands(text) {
+            const match = text.match(/\[CLIENT_OPEN:\s*(.*?)\]/);
+            if (match) {
+                const url = match[1];
+                window.open(url, '_blank');
+                text = text.replace(match[0], "").trim();
+            }
+            return text;
+        }
+
         function cancelExecution() {
             document.getElementById("execution-card").style.display = "none";
             document.getElementById("exec-password").value = "";
@@ -329,7 +339,8 @@
                     triggerGlitch();
                 }
                 
-                const botText = checkExecutionRequest(data.response);
+                let botText = checkExecutionRequest(data.response);
+                botText = checkClientCommands(botText);
                 if (botText) {
                     appendMessage('Ultron', botText, 'ultron-msg');
                 }
