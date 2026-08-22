@@ -20,6 +20,22 @@ def main():
     
     start_sensors()
     
+    # ── BOOT RECOVERY CHECK ───────────────────────────────────────────────────
+    from core.state import load_checkpoint, audit_log, update_heartbeat
+    checkpoint = load_checkpoint()
+    if checkpoint:
+        print(f"[RECOVERY] Interrupted Goal detected: G-{checkpoint['goal_id']} — {checkpoint['objective']}")
+        print(f"[RECOVERY] Last checkpoint: {checkpoint['last_checkpoint']} | Status: {checkpoint['status']}")
+        audit_log("RECOVERY_BOOT", {
+            "goal_id": checkpoint["goal_id"],
+            "objective": checkpoint["objective"],
+            "last_step": checkpoint.get("current_step", 0)
+        })
+        update_heartbeat(status="RECOVERING", current_goal=checkpoint["objective"])
+    else:
+        update_heartbeat(status="OPERATIONAL")
+    # ─────────────────────────────────────────────────────────────────────────
+    
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key or api_key == "your_api_key_here":
         print("Error: GEMINI_API_KEY not found. Please update your .env file.")

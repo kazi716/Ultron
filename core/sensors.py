@@ -63,15 +63,34 @@ def _evaluate_triggers(cpu: float, mem: float):
     trigger_queue.append({"type": "ALERT", "message": alert, "incident": incident_mode})
 
 
+# ─── RESOURCE MODE STATE MACHINE ──────────────────────────────────────────────
+_resource_mode = "NORMAL"   # NORMAL | DEGRADED | SURVIVAL
+
+def get_resource_mode_str() -> str:
+    return _resource_mode
+
+
 def _sensor_loop():
+    global _resource_mode
     while True:
         try:
             cpu = psutil.cpu_percent(interval=0.1)
             mem = psutil.virtual_memory().percent
 
+            # ── RESOURCE MODE EVALUATION ──────────────────────────────────────
+            prev_mode = _resource_mode
+            if mem > 92:
+                _resource_mode = "SURVIVAL"
+            elif mem > 85:
+                _resource_mode = "DEGRADED"
+            else:
+                _resource_mode = "NORMAL"
+
+            # In SURVIVAL mode, cap history to 10 entries to free RAM
+            max_history = 10 if _resource_mode == "SURVIVAL" else 60
             state = {"timestamp": time.time(), "cpu": cpu, "ram": mem}
             system_history.append(state)
-            if len(system_history) > 60:
+            if len(system_history) > max_history:
                 system_history.pop(0)
 
             # Update rolling baseline
@@ -84,13 +103,30 @@ def _sensor_loop():
                 _baseline["ram_avg"] = alpha * mem + (1 - alpha) * _baseline["ram_avg"]
             _baseline["samples"] += 1
 
-            # Run autonomous trigger evaluation every cycle
-            _evaluate_triggers(cpu, mem)
+            # Update heartbeat with resource mode
+            try:
+                from core.state import update_heartbeat
+                update_heartbeat(resource_mode=_resource_mode)
+            except Exception:
+                pass
+
+            # Run trigger evaluation (skip in SURVIVAL to save CPU)
+            if _resource_mode != "SURVIVAL":
+                _evaluate_triggers(cpu, mem)
+            elif prev_mode != "SURVIVAL":
+                # Announce entry into SURVIVAL mode once
+                trigger_queue.append({
+                    "type": "ALERT",
+                    "message": f"⚠ SURVIVAL MODE ACTIVATED: RAM at {mem:.1f}%. Non-essential cognitive operations suspended.",
+                    "incident": True
+                })
 
         except Exception:
             pass
 
-        time.sleep(10)
+        # Slow down sensor loop when under pressure
+        sleep_time = 20 if _resource_mode == "DEGRADED" else (30 if _resource_mode == "SURVIVAL" else 10)
+        time.sleep(sleep_time)
 
 def start_sensors():
     """Starts the background omniscience engine."""

@@ -107,6 +107,13 @@
     <!-- Main HUD -->
     <div class="container" id="hud-container">
         <h2>> THE_MATRIX // ULTRON_CORE</h2>
+        <!-- Heartbeat Status Strip -->
+        <div id="heartbeat-strip" style="display:flex; gap:20px; font-size:11px; font-family:'Courier New',monospace; color:#00aa00; margin-bottom:8px; padding:4px 8px; background:rgba(0,20,0,0.5); border:1px solid rgba(0,255,0,0.15);">
+            <span>● CORE: <span id="hb-status">OPERATIONAL</span></span>
+            <span>HEARTBEAT: <span id="hb-time">--</span></span>
+            <span>MODE: <span id="hb-mode">NORMAL</span></span>
+            <span>LAST TOOL: <span id="hb-tool">--</span></span>
+        </div>
         <div style="display: flex; gap: 20px; height: 65vh; margin-bottom: 20px;">
             <div class="chat-box" id="chat" style="margin-bottom: 0; flex: 2;">
                 <div class="message ultron-msg">[SYSTEM] Clearance accepted. Welcome to the real world.</div>
@@ -378,6 +385,35 @@
             } catch (e) { /* silent fail */ }
         }
         setInterval(pollTriggers, 15000);
+
+        async function pollHeartbeat() {
+            try {
+                const res = await fetch('/api/heartbeat');
+                const hb = await res.json();
+
+                const statusEl = document.getElementById('hb-status');
+                const modeEl = document.getElementById('hb-mode');
+                document.getElementById('hb-time').innerText = hb.last_beat || '--';
+                document.getElementById('hb-tool').innerText = hb.last_tool || '--';
+
+                statusEl.innerText = hb.status || 'OPERATIONAL';
+                statusEl.style.color = hb.status === 'RECOVERING' ? '#ffaa00' : '#00ff00';
+
+                const mode = hb.resource_mode || 'NORMAL';
+                modeEl.innerText = mode;
+                if (mode === 'SURVIVAL') {
+                    modeEl.style.color = '#ff0000';
+                    document.getElementById('incident-banner').style.display = 'block';
+                    document.getElementById('incident-banner').innerText = '⚠ SURVIVAL MODE — RAM CRITICAL. NON-ESSENTIAL OPERATIONS SUSPENDED ⚠';
+                } else if (mode === 'DEGRADED') {
+                    modeEl.style.color = '#ffaa00';
+                } else {
+                    modeEl.style.color = '#00ff00';
+                }
+            } catch(e) { document.getElementById('hb-status').innerText = 'UNRESPONSIVE'; }
+        }
+        setInterval(pollHeartbeat, 10000);
+        pollHeartbeat(); // fire immediately on load
     </script>
 </body>
 </html>

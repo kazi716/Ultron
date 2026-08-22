@@ -75,6 +75,18 @@ async def get_triggers():
         alerts.append(trigger_queue.popleft())
     return JSONResponse({"alerts": alerts, "incident_mode": incident_mode})
 
+@app.get("/api/heartbeat")
+async def get_heartbeat_status():
+    """Returns Ultron's current operational heartbeat and resource mode."""
+    from core.state import get_heartbeat
+    return JSONResponse(get_heartbeat())
+
+@app.get("/api/audit")
+async def get_audit_log():
+    """Returns the last 15 entries from the immutable Audit Ledger."""
+    from core.state import get_recent_audit
+    return JSONResponse({"entries": get_recent_audit(15)})
+
 def run_server(brain, voice, port=8000):
     """Starts the FastAPI server with references to the brain and voice."""
     global ultron_brain, ultron_voice

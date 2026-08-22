@@ -62,6 +62,9 @@ _active_goal: Optional[Goal] = None
 def set_active_goal(goal: Goal):
     global _active_goal
     _active_goal = goal
+    from core.state import save_checkpoint, audit_log
+    audit_log("GOAL_CREATED", {"goal_id": goal.id, "objective": goal.objective})
+    save_checkpoint(goal)
 
 
 def get_active_goal() -> Optional[Goal]:
@@ -70,6 +73,11 @@ def get_active_goal() -> Optional[Goal]:
 
 def clear_active_goal():
     global _active_goal
+    if _active_goal:
+        _active_goal.status = GoalStatus.COMPLETE
+        from core.state import save_checkpoint, audit_log, clear_checkpoint
+        audit_log("GOAL_COMPLETE", {"goal_id": _active_goal.id, "objective": _active_goal.objective})
+        clear_checkpoint()
     _active_goal = None
 
 
