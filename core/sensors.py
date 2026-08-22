@@ -11,13 +11,15 @@ _baseline = {"cpu_avg": None, "ram_avg": None, "samples": 0}
 trigger_queue = deque(maxlen=10)
 incident_mode = False          # True when multiple anomalies fire together
 _ram_alert_streak = 0          # consecutive cycles above threshold
+_last_alert_sent = 0          # Tracks when we last sent an alert
+_last_alert_msg = ""          # Tracks what the last alert was
 
 def _evaluate_triggers(cpu: float, mem: float):
     """
     Level 0 autonomous trigger evaluation.
     Runs every 10 seconds. No Gemini call — pure Python decision logic.
     """
-    global incident_mode, _ram_alert_streak
+    global incident_mode, _ram_alert_streak, _last_alert_sent, _last_alert_msg
 
     anomalies = []
 
@@ -47,6 +49,16 @@ def _evaluate_triggers(cpu: float, mem: float):
     else:
         incident_mode = False
         return  # No anomalies — stay silent
+
+    # --- COOLDOWN LOGIC (Anti-Spam) ---
+    current_time = time.time()
+    
+    # If the message is the same, wait 120 seconds before repeating it
+    if alert == _last_alert_msg and (current_time - _last_alert_sent) < 120:
+        return 
+        
+    _last_alert_sent = current_time
+    _last_alert_msg = alert
 
     trigger_queue.append({"type": "ALERT", "message": alert, "incident": incident_mode})
 
